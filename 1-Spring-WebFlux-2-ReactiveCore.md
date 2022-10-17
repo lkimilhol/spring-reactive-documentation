@@ -1,4 +1,4 @@
-# 1.2.1 리액티브 코어
+# 1.2 리액티브 코어
 
 스프링웹 모듈은 다음과 같은 리액티브 웹 어플리케이션 기본 지원이 포함되어 있습니다.
 
@@ -146,4 +146,15 @@ WebHandler API에서 WebFilter를 사용하여 필터의 나머지 처리 체인
 자세한 내용은 CORS 및 CORS WebFilter에 대한 섹션을 참조하십시오.
 
 ## 1.2.4. Exceptions
+
+WebHandler API에서는 WebExceptionHandler를 사용하여 WebFilter 인스턴스 체인과 대상 WebHandler의 예외를 처리할 수 있습니다. WebFlux Config를 사용할 때 WebExceptionHandler를 등록하는 것은 Spring bean으로 선언하고 bean 선언에 @Order를 사용하거나 Ordered를 구현하여 우선 순위를 표현하는 것만 큼 간단합니다.
+
+다음 표는 사용 가능한 WebExceptionHandler 구현을 설명합니다.
+
+|예외 핸들러|설명|
+|------|---|
+|ResponseStatusExceptionHandler|예외의 HTTP 상태 코드로 응답을 설정하여 ResponseStatusException 유형의 예외를 처리합니다.|
+|WebFluxResponseStatusExceptionHandler|예외에 대한 @ResponseStatus 주석의 HTTP 상태 코드를 결정할 수 있는 ResponseStatusExceptionHandler의 확장입니다.이 처리기는 WebFlux 구성에 선언됩니다.|
+
+1.2.5. Codecs
 
