@@ -158,3 +158,132 @@ WebHandler API에서는 WebExceptionHandler를 사용하여 WebFilter 인스턴�
 
 1.2.5. Codecs
 
+스프링 웹 및 스프링 코어 모듈은 리액티브 스트림 백프레셔를 사용하여 논블로킹 I/O를 통해 더 높은 수준의 개체와 바이트 콘텐츠를 직렬화하고 역직렬화할 수 있도록 지원합니다. 다음은 이러한 지원에 대해 설명합니다.
+
+- 인코더와 디코더는 HTTP와 무관하게 콘텐츠를 인코딩하고 디코딩하는 저수준 계약이다.
+
+- HttpMessageReader 및 HttpMessageWriter는 HTTP 메시지 내용을 인코딩하고 디코딩하는 약속입니다.
+
+- Encoder는 EncoderHttpMessageWriter로 래핑하여 웹 응용 프로그램에서 사용하도록 조정할 수 있으며 Decoder는 DecoderHttpMessageReader로 래핑할 수 있습니다.
+
+- 데이터 버퍼는 다른 바이트 버퍼 표현(예를 들어 Netty ByteBuf, java.nio.ByteBuffer 등)을 추상화하며 모든 코덱이 작업하는 것입니다. 자세한 내용은 "스프링 코어" 섹션의 데이터 버퍼 및 코덱을 참조하십시오.
+
+스프링 코어 모듈은 byte[], ByteBuffer, DataBuffer, Resource 및 String 인코더 및 디코더 구현을 제공합니다. 스프링 웹 모듈은 폼 데이터, 멀티파트 콘텐츠, 서버 전송 이벤트 등을 위한 웹 전용 HTTP 메시지 리더 및 작성기 구현과 함께 잭슨 JSON, 잭슨 스마일, JAXB2, 프로토콜 버퍼 및 기타 인코더와 디코더를 제공합니다.
+
+ClientCodecConfigurer 및 ServerCodecConfigurer는 일반적으로 응용 프로그램에서 사용할 코덱을 구성하고 사용자 지정하는 데 사용됩니다. HTTP 메시지 코덱 구성에 대한 절을 참조하십시오.
+
+### Jackson JSON
+
+JSON과 이진 JSON(Smile)은 모두 Jackson 라이브러리가 있을 때 지원됩니다.
+
+Jackson2Decoder는 다음과 같이 작동합니다.
+
+- Jackson의 비동기 논블록킹 파서는 바이트 청크 스트림을 JSON 객체를 나타내는 TokenBuffer의 스트림으로 집계하는 데 사용됩니다.
+
+- 각 TokenBuffer는 Jackson의 ObjectMapper로 전달되어 더 높은 수준의 객체를 만듭니다.
+
+- 단일 값 게시자(예: 모노)로 디코딩할 때 토큰 버퍼가 하나 있습니다.
+
+- 멀티 밸류 게시자로 디코딩 할 때 (예. Flux), 각 TokenBuffer는 완전히 형성된 객체에 대해 충분한 바이트가 수신되는 즉시 ObjectMapper로 전달됩니다. 입력 콘텐츠는 JSON 배열 또는 NDJSON, JSON 라인 또는 JSON 텍스트 시퀀스와 같은 라인으로 구분된 JSON 형식일 수 있습니다.
+
+Jackson2Encoder는 다음과 같이 작동합니다:
+
+- 단일 값 게시자(예: Mono)의 경우 ObjectMapper를 통해 직렬화하기만 하면 됩니다.
+
+- application/json이 있는 멀티 벨류 퍼블리셔의 경우 기본적으로 Flux#collectToList()를 사용하여 값을 수집한 다음 결과 컬렉션을 직렬화합니다.
+
+- application/x-ndjson 또는  application/stream + x-jackson-smile과 같은 스트리밍 미디어 유형이 있는 멀리 밸류 퍼블리셔의 경우 줄로 구분된 JSON 형식을 사용하여 각 값을 개별적으로 인코딩, 쓰기 및 플러시합니다. 다른 스트리밍 미디어 타입들이 인코더에 등록될 수 있습니다.
+
+- SSE의 경우 이벤트별로 Jackson2Encoder가 호출되고 지연 없이 전달되도록 출력이 플러시됩니다.
+
+> 기본적으로 Jackson2Encoder와 Jackson2Decoder는 String 유형의 요소를 지원하지 않습니다. 대신 문자열 또는 문자열 시퀀스가 CharSequenceEncoder에 의해 렌더링되는 직렬화된 JSON 콘텐츠를 나타낸다는 것이 기본 가정이다. Flux<String>에서 JSON 배열을 렌더링해야 하는 경우 Flux#collectToList()를 사용하여 Mono<List<String>를 인코딩합니다.
+
+### Form Data
+
+FormHttpMessageReader 및 FormHttpMessageWriter는 응용 프로그램/x-www-form-url 인코딩된 콘텐츠를 디코딩하고 인코딩할 수 있도록 지원합니다.서버 웹 익스체인지(ServerWebExchange)는 여러 위치에서 양식 내용에 액세스해야 하는 서버 측에서 FormHttpMessageReader를 통해 내용을 구문 분석한 다음 반복 액세스를 위해 결과를 캐시하는 전용 getFormData() 메서드를 제공합니다. WebHandler API 섹션의 Form Data를 참조하십시오.getFormData()를 사용하면 원본 원시 콘텐츠를 더 이상 요청 본문에서 읽을 수 없습니다. 이러한 이유로, 응용프로그램은 원시 요청 본문에서 읽기보다는 캐시된 양식 데이터에 액세스하기 위해 서버 웹 Exchange를 일관되게 통과해야 합니다.
+
+### Multipart
+
+MultipartHttpMessageReader 및 MultipartHttpMessageWriter는 "Multipart/form-data" 콘텐츠의 디코딩 및 인코딩을 지원합니다. 차례로 MultipartHttpMessageReader는 다른 HttpMessageReader에게 Flux<Part>에 대한 실제 구문 분석을 위임한 다음 단순히 부품을 MultiValueMap으로 수집합니다. 기본적으로 DefaultPartHttpMessageReader가 사용되지만 ServerCodecConfigurer를 통해 변경할 수 있습니다. DefaultPartHttpMessageReader에 대한 자세한 내용은 DefaultPartHttpMessageReader의 javadoc을 참조하십시오.
+
+서버 웹 익스체인지에서는 멀티파트 양식 컨텐츠에 여러 위치에서 액세스해야 하는 서버 측에서 MultipartHttpMessageReader를 통해 컨텐츠를 구문 분석한 다음 반복 액세스를 위해 결과를 캐시하는 전용 getMultipartData() 메서드를 제공합니다. WebHandler API 섹션의 멀티파트 데이터를 참조하십시오.
+
+getMultipartData()를 사용하면 원본 원시 콘텐츠를 더 이상 요청 본문에서 읽을 수 없습니다. 이러한 이유로, 어플리케이션은 부품에 대한 반복적이고 지도와 같은 액세스에 대해 getMultipartData()를 일관되게 사용하거나, 그렇지 않으면 SynchronossPartHttpMessageReader를 사용하여 Flux<Part>에 한 번 액세스해야 합니다.
+
+### Limits
+
+입력 스트림의 일부 또는 전부를 버퍼링하는 디코더 및 HttpMessageReader 구현체는 메모리에서 버퍼링할 최대 바이트 수를 제한하여 구성할 수 있습니다. 예를 들어 @RequestBody byte[], x-ww-form-url 인코딩된 데이터가 있는 컨트롤러 메서드와 같이 입력이 집계되고 단일 개체로 표현되기 때문에 버퍼링이 발생하는 경우가 있습니다. 버퍼링은 입력 스트림을 분할할 때(예: 구분된 텍스트, JSON 객체의 스트림 등) 스트리밍에서도 발생할 수 있습니다. 이러한 스트리밍 사례의 경우 스트림의 한 개체와 관련된 바이트 수에 제한이 적용됩니다.
+
+버퍼 크기를 설정하려면 지정된 디코더 또는 HttpMessageReader가 maxInMemorySize 속성을 노출하는지 확인하고, 노출되어 있는 경우 Javadoc에 기본값에 대한 세부 정보가 표시됩니다. 서버 측에서 ServerCodecConfigurer는 모든 코덱을 설정할 수 있는 단일 위치를 제공합니다. HTTP 메시지 코덱을 참조하십시오. 클라이언트 측에서는 WebClient에서 모든 코덱에 대한 제한을 WebClient.Builder에서 변경할 수 있습니다.
+
+Multipart 구문 분석의 경우 maxInMemorySize 속성은 파일이 아닌 부분의 크기를 제한합니다. 파일 요소의 경우 요소가 디스크에 기록되는 임계값을 결정합니다. 디스크에 기록된 파일 부분의 경우 파트 당 디스크 공간의 양을 제한하는 추가 maxDiskUsagePerPart 속성이 있습니다. 또한 multipart 요청의 전체 부품 수를 제한하는 maxParts 속성이 있습니다. WebFlux에서 세 가지를 모두 구성하려면 미리 구성된 MultipartHttpMessageReader 인스턴스를 ServerCodecConfigurer에 제공해야 합니다.
+
+### Streaming
+
+HTTP 응답(예: text/event-stream, application/x-ndjson)으로 스트리밍할 때는 연결이 끊긴 클라이언트를 안정적으로 감지하기 위해 데이터를 정기적으로 전송하는 것이 중요합니다. 이러한 전송은 댓글 전용 빈 SSE 이벤트 또는 하트비트 역할을 효과적으로 수행할 수 있는 다른 "no-op" 데이터일 수 있습니다.
+
+### DataBuffer
+
+DataBuffer는 WebFlux의 바이트 버퍼를 나타냅니다. 이 참조의 스프링 코어 부분에 대한 자세한 내용은 데이터 버퍼 및 코덱에 대한 섹션을 참조하십시오. Netty와 같은 일부 서버에서는 바이트 버퍼가 풀링되고 참조 카운트가 이루어지며 메모리 누수를 방지하기 위해 소비될 때 해제되어야 합니다.
+
+웹플럭스 어플리케이션은 코덱에 의존하여 더 높은 수준의 개체로 변환하거나 사용자 지정 코덱을 만들지 않는 한, 데이터 버퍼를 직접 소비하거나 생산하지 않는 한, 일반적으로 이러한 문제에 대해 걱정할 필요가 없습니다. 이러한 경우 데이터 버퍼 및 코덱, 특히 데이터 버퍼 사용에 대한 섹션을 참조하십시오.
+
+## 1.2.6. Logging
+
+Spring WebFlux의 DEBUG 레벨 로깅은 소형, 최소 및 인간 친화적으로 설계되었습니다. 특정 문제를 디버깅할 때만 유용한 다른 정보와 반복해서 유용한 정보의 높은 가치 비트에 중점을 둡니다.
+
+TRACE 수준 로깅은 일반적으로 DEBUG와 동일한 원칙을 따르지만(예를 들어 방화벽이 되어서는 안 된다) 문제를 디버깅하는 데 사용할 수 있습니다. 또한 일부 로그 메시지는 TRACE와 DEBUG에서 서로 다른 수준의 세부 정보를 표시할 수 있습니다.
+
+좋은 로깅은 로그를 사용하는 경험에서 비롯됩니다. 만약 당신이 명시된 목표를 달성하지 못하는 것을 발견한다면, 우리에게 알려주세요.
+
+### Log Id
+
+WebFlux에서 단일 요청은 여러 스레드에서 실행될 수 있으며 스레드 ID는 특정 요청에 속하는 로그 메시지를 상호 연결하는 데 유용하지 않습니다. 따라서 WebFlux 로그 메시지에는 기본적으로 요청별 ID가 접두사로 지정됩니다.
+
+서버 측에서 로그 ID는 ServerWebExchange 속성 (LOG_ID_ATTRIBUTE)에 저장되며 해당 ID를 기반으로하는 완전 형식의 접두어는 ServerWebExchange # getLogPrefix ()에서 사용할 수 있습니다. WebClient 측에서는 log ID가 ClientRequest 속성(LOG_ID_ATTRIBUTE)에 저장되지만 ClientRequest#logPrefix()에서는 완전히 포맷된 접두사를 사용할 수 있습니다.
+
+### Sensitive Data
+
+DEBUG 및 TRACE 로깅은 중요한 정보를 기록할 수 있습니다. 따라서 양식 매개 변수와 헤더는 기본적으로 마스킹되며 해당 로깅을 완전히 사용하도록 명시적으로 설정해야 합니다.
+
+다음 예제에서는 서버 측 요청에 대해 그렇게 하는 방법을 보여 줍니다.
+
+```java
+@Configuration
+@EnableWebFlux
+class MyConfig implements WebFluxConfigurer {
+
+    @Override
+    public void configureHttpMessageCodecs(ServerCodecConfigurer configurer) {
+        configurer.defaultCodecs().enableLoggingRequestDetails(true);
+    }
+}
+```
+
+다음 예제에서는 클라이언트 측 요청에 대해 이렇게 하는 방법을 보여 줍니다.
+
+```java
+Consumer<ClientCodecConfigurer> consumer = configurer ->
+        configurer.defaultCodecs().enableLoggingRequestDetails(true);
+
+WebClient webClient = WebClient.builder()
+        .exchangeStrategies(strategies -> strategies.codecs(consumer))
+        .build();
+```
+
+### Appenders
+
+SLF4J 및 Log4J2와 같은 로깅 라이브러리는 차단을 방지하는 비동기 로거를 제공합니다. 로깅을 위해 대기열에 넣을 수 없는 메시지를 삭제하는 등의 단점이 있지만, 현재 reactive, 논블로킹 애플리케이션에서 사용할 수 있는 최고의 옵션입니다.
+
+### Custom codecs
+
+어플리케이션은 추가 미디어 타입을 지원하기 위해 사용자 정의 코덱을 등록하거나 기본 코덱에서 지원하지 않는 특정 동작을 등록할 수 있습니다. 개발자가 표현한 일부 구성 옵션은 기본 코덱에 적용됩니다. 사용자 지정 코덱은 버퍼 제한을 적용하거나 중요한 데이터를 기록하는 것과 같은 기본 설정에 맞출 기회를 얻기를 원할 수 있습니다.다음 예제에서는 클라이언트 측 요청에 대해 이렇게 하는 방법을 보여 줍니다.
+
+```java
+WebClient webClient = WebClient.builder()
+        .codecs(configurer -> {
+                CustomDecoder decoder = new CustomDecoder();
+                configurer.customCodecs().registerWithDefaultConfig(decoder);
+        })
+        .build();
+```
