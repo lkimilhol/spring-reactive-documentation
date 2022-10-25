@@ -145,6 +145,10 @@ WebHandler API에서 WebFilter를 사용하여 필터의 나머지 처리 체인
 
 자세한 내용은 CORS 및 CORS WebFilter에 대한 섹션을 참조하십시오.
 
+### CORS
+
+Spring WebFlux는 컨트롤러의 어노테이션을 통해 CORS 구성을 세밀하게 지원합니다. 그러나 Spring Security와 함께 사용할 때는 내장 CorsFilter를 사용하는 것이 좋습니다.이 필터는 Spring Security의 필터 체인보다 먼저 주문해야합니다.
+
 ## 1.2.4. Exceptions
 
 WebHandler API에서는 WebExceptionHandler를 사용하여 WebFilter 인스턴스 체인과 대상 WebHandler의 예외를 처리할 수 있습니다. WebFlux Config를 사용할 때 WebExceptionHandler를 등록하는 것은 Spring bean으로 선언하고 bean 선언에 @Order를 사용하거나 Ordered를 구현하여 우선 순위를 표현하는 것만 큼 간단합니다.
