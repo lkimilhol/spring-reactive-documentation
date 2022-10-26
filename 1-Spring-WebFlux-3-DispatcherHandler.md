@@ -31,7 +31,7 @@ DispatcherHandler는 요청을 처리하고 적절한 응답을 렌더링하기 
 
 |빈타입|설명|
 |------|---|
-|HandlerMapping|요청을 핸들러에 매핑합니다. 매핑은 몇 가지 기준을 기반으로 하며 세부 사항은 HandlerMapping 구현 (어노테이션 컨트롤러, 간단한 URL 패턴 매핑 등)에 따라 다릅니다. 주요 HandlerMapping 구현은 @RequestMapping 주석 메서드를 위한 RequestMappingHandlerMapping, 기능적 엔드포인트 경로를 위한 RouterFunctionMapping, URI 경로 패턴 및 WebHandler 인스턴스의 명시적 등록을 위한 SimpleUrlHandlerMapping입니다.|
+|HandlerMapping|요청을 핸들러에 매핑합니다. 매핑은 몇 가지 기준을 기반으로 하며 세부 사항은 HandlerMapping 구현 (어노테이션 컨트롤러, 간단한 URL 패턴 매핑 등)에 따라 다릅니다. 주요 HandlerMapping 구현은 @RequestMapping 어노테이션이 달린 메서드를 위한 RequestMappingHandlerMapping, 함수형 엔드포인트 경로를 위한 RouterFunctionMapping, URI 경로 패턴 및 WebHandler 인스턴스의 명시적 등록을 위한 SimpleUrlHandlerMapping입니다.|
 |HandlerAdapter|핸들러가 실제로 호출되는 방식에 관계없이 요청에 매핑된 핸들러를 호출하도록 DispatcherHandler를 돕습니다. 예를 들어 어노테이션이 달린 컨트롤러를 호출하려면 어노테이션을 해결해야 합니다. HandlerAdapter의 주요 목적은 이러한 세부 사항으로부터 DispatcherHandler를 보호하는 것입니다.|
 |HandlerResultHandler|핸들러 호출의 결과를 처리하고 응답을 완료합니다. 결과 처리를 참조하십시오.|
 
