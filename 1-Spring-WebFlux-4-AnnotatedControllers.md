@@ -138,3 +138,93 @@ Spring WebFlux는 /person.*과 같은 매핑이 /person.*과도 일치하는 Spr
 
 캐치 올 패턴 (예 : **, {*varName})은 득점에서 제외되며 항상 마지막으로 정렬됩니다. 두 패턴이 모두 캐치 올이면 더 긴 패턴이 선택됩니다.
 
+### Consumable Media Types
+
+다음 예시와 같이 요청의 내용 유형을 기준으로 요청 매핑을 좁힐 수 있습니다.
+
+```java
+@PostMapping(path = "/pets", consumes = "application/json")
+public void addPet(@RequestBody Pet pet) {
+    // ...
+}
+```
+consumes 속성은 부정 표현식도 지원합니다. 예를 들어 !text/plain은 텍스트/plain 이외의 모든 내용 유형을 의미합니다.클래스 수준에서 공유 소비 속성을 선언할 수 있습니다. 그러나 대부분의 다른 요청 매핑 속성과 달리 클래스 수준에서 사용될 때 메서드 수준은 클래스 수준 선언을 확장하지 않고 속성 재정의를 사용합니다.
+
+> MediaType은 일반적으로 사용되는 미디어 유형 | 예를 들어 Application_JSON_VALUE 및 Application_XML_VALUE에 대한 상수를 제공합니다.
+
+### Producible Media Types
+
+다음 예제에서 볼 수 있듯이 Accept request 헤더와 컨트롤러 메소드가 생성하는 콘텐츠 유형 목록을 기반으로 요청 매핑을 좁힐 수 있습니다.
+
+```java
+@GetMapping(path = "/pets/{petId}", produces = "application/json")
+@ResponseBody
+public Pet getPet(@PathVariable String petId) {
+    // ...
+}
+```
+
+미디어 유형은 문자 집합을 지정할 수 있습니다. 부정 표현식은 지원됩니다. 예를 들어 !text/plain은 텍스트/일반 이외의 모든 콘텐츠 유형을 의미합니다.
+
+> MediaType은 일반적으로 사용되는 미디어 유형에 대해 상수를 제공합니다(예: APPLICATION_JSON_VALUE, APPLICATION_XML_VALUE).
+
+### Parameters and Headers
+
+쿼리 매개 변수 조건을 기준으로 요청 매핑을 좁힐 수 있습니다. 쿼리 매개 변수 (myParam)의 존재 여부, 부재 (! myParam) 또는 특정 값 (myParam = myValue)을 테스트 할 수 있습니다. 다음 예제는 값이 있는 매개 변수를 테스트합니다.
+
+```java
+@GetMapping(path = "/pets/{petId}", params = "myParam=myValue") // Check that myParam equals myValue.
+
+public void findPet(@PathVariable String petId) {
+    // ...
+}
+```
+
+다음 예시와 같이 요청 헤더 조건과 동일한 조건을 사용할 수도 있습니다.
+
+```java
+@GetMapping(path = "/pets", headers = "myHeader=myValue") // Check that myHeader equals myValue
+public void findPet(@PathVariable String petId) {
+    // ...
+}
+```
+
+### HTTP HEAD, OPTIONS
+
+@GetMapping 및 @RequestMapping(메서드=Method)입니다.GET)는 요청 매핑을 위해 HTTP HEAD를 명백하게 지원합니다. 컨트롤러 메서드는 변경할 필요가 없습니다. HttpHandler 서버 어댑터에 적용된 응답 래퍼는 Content-Length 헤더가 응답에 실제로 쓰지 않고 쓰여진 바이트 수로 설정되도록 합니다.
+
+기본적으로 HTTP OPTIONS는 URL 패턴이 일치하는 모든 @RequestMapping 메서드에 나열된 HTTP 메서드 목록으로 응답 허용 헤더를 설정하여 처리됩니다.
+
+HTTP 메소드 선언이 없는 @RequestMapping의 경우 허용 헤더는 GET, HEAD, POST, PUT, PATCH, DELET, OPTIONS로 설정됩니다. 컨트롤러 메소드는 항상 지원되는 HTTP 메소드를 선언해야합니다 (예 : HTTP 메소드 특정 법규-  @GetMapping, @PostMapping 등).
+
+@RequestMapping 메서드를 HTTP HEAD 및 HTTP OPTIONS에 명시적으로 매핑할 수 있지만 일반적인 경우에는 그럴 필요가 없습니다.
+
+### Custom Annotations
+
+Spring WebFlux는 요청 매핑을 위해 구성된 어노테이션의 사용을 지원합니다. 이러한 어노테이션들은 그 자체가 @RequestMapping으로 메타 어노테이션을 달고 더 좁고 구체적인 목적을 가진 @RequestMapping 속성의 하위 집합(또는 모든)을 다시 선언하도록 구성된 어노테이션입니다.
+
+@GetMapping, @PostMapping, @PutMapping, @DeleteMapping 및 @PatchMapping은 구성된 어노테이션의 예입니다. 대부분의 컨트롤러 메서드는 특정 HTTP 메서드에 매핑되어야 하며 @RequestMapping은 기본적으로 모든 HTTP 메서드와 일치하기 때문에 제공됩니다. 구성된 어노테이션의 예가 필요한 경우, 어노테이션의 선언 방식을 살펴보십시오.
+
+Spring WebFlux는 또한 사용자 지정 요청 일치 로직을 사용하여 사용자 지정 요청 매핑 속성을 지원합니다. 이는 RequestMappingHandlerMapping을 하위 클래스화하고 getCustomMethodCondition 메소드를 재정의해야 하는 고급 옵션으로 사용자 지정 속성을 확인하고 자신의 RequestCondition을 반환할 수 있습니다.
+
+### 명시적 등록
+
+동적 등록 또는 동일한 핸들러의 다른 인스턴스(예: 다른 URL)와 같은 고급 사례에 사용할 수 있는 핸들러 메서드를 프로그래밍 방식으로 등록할 수 있습니다. 다음 예제에서는 이 작업을 수행하는 방법을 보여 줍니다.
+
+```java
+@Configuration
+public class MyConfig {
+
+    @Autowired
+    public void setHandlerMapping(RequestMappingHandlerMapping mapping, UserHandler handler) throws NoSuchMethodException {
+
+        RequestMappingInfo info = RequestMappingInfo
+                .paths("/user/{id}").methods(RequestMethod.GET).build(); 
+
+        Method method = UserHandler.class.getMethod("getUser", Long.class); 
+
+        mapping.registerMapping(info, handler, method); 
+    }
+
+}
+```
