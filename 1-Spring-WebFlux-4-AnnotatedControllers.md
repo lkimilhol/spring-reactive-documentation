@@ -39,7 +39,7 @@ public class WebConfig {
 
 @RequestMapping 어노테이션은 요청을 컨트롤러 메서드에 매핑하는 데 사용됩니다. URL, HTTP 메서드, 요청 매개 변수, 헤더 및 미디어 타입별로 일치시킬 수 있는 다양한 속성이 있습니다. 클래스 수준에서 공유 매핑을 표현하거나 메서드 수준에서 사용하여 특정 엔드포인트 매핑으로 범위를 좁힐 수 있습니다.
 
-@RequestMapping의 HTTP 메서드별 바로 적용 가능한 어노텡션도 있습니다.
+@RequestMapping의 HTTP 메서드별 바로 적용 가능한 어노테이션도 있습니다.
 
 - @GetMapping
 
