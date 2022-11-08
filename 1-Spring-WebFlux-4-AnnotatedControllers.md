@@ -237,16 +237,35 @@ public class MyConfig {
 
 다음 표는 지원되는 컨트롤러 메서드 아규먼트를 보여줍니다. 리액티브 타입(Reactor, RxJava 또는 기타)은 블록킹 I/O(예: 요청 바디 읽기)을 지원하는 아규먼트에서 지원됩니다. 이 부분은 설명 열에 표시됩니다. 블록킹이 필요가 없는 인수에는 리액티브 타입이 필요하지 않습니다.
 
-| 패턴                                    | 설명                                                                                              |
-|---------------------------------------|-------------------------------------------------------------------------------------------------|
-| ServerWebExchange                     | ServerWebExchange에 접근합니다- HTTP 요청과 응답, 요청과 세션 어트리뷰트, checkNotModified 메서드, 기타 등등을 위한 컨테이너 입니다.  |
-| ServerHttpRequest, ServerHttpResponse | Http 요청 또는 응답에 접근합니다.                                                                           |
-| WebSession                            | 세션에 접근합니다. 어트리뷰트가 추가되지 않는 한 새 세션을 강제로 시작하지 않습니다. 리액티브 타입을 지원합니다.                                |
-| java.security.Principal               | 현재 인증된 사용자- 알려진 경우 특정 Principal 구현 클래스일 수 있습니다. 리액티브 타입을 지원합니다.                                 |
-| org.springframework.http.HttpMethod   | 요청의 HTTP 메서드입니다.                                                                                |
-| java.util.Locale                      | 현재 요청 로케일이, 가장 구체적인 사용가능한 로케일리졸버를 결정합니다. - 실제로 구성된 LocaleResolver/LocaleContextResolver가 사용됩니다. |
-| java.util.TimeZone + java.time.ZoneId | LocaleContextResolver에 의해 결정된 현재 요청과 연관된 표준 시간대.                                                |
-| @PathVariable                         | URI 템플릿 변수에 대한 액세스용입니다. URI 패턴을 참조하십시오.                                                         |
-| @MatrixVariable                       | URI 경로 세그먼트의 이름-값 쌍에 대한 액세스용입니다. 자세한 내용은 메트릭스 변수를 참조하십시오.                                       |
+| 패턴                                                                                 | 설명                                                                                                                                                                               |
+|------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| ServerWebExchange                                                                  | ServerWebExchange에 접근합니다- HTTP 요청과 응답, 요청과 세션 어트리뷰트, checkNotModified 메서드, 기타 등등을 위한 컨테이너 입니다.                                                                                   |
+| ServerHttpRequest, ServerHttpResponse                                              | Http 요청 또는 응답에 접근합니다.                                                                                                                                                            |
+| WebSession                                                                         | 세션에 접근합니다. 어트리뷰트가 추가되지 않는 한 새 세션을 강제로 시작하지 않습니다. 리액티브 타입을 지원합니다.                                                                                                                 |
+| java.security.Principal                                                            | 현재 인증된 사용자- 알려진 경우 특정 Principal 구현 클래스일 수 있습니다. 리액티브 타입을 지원합니다.                                                                                                                  |
+| org.springframework.http.HttpMethod                                                | 요청의 HTTP 메서드입니다.                                                                                                                                                                 |
+| java.util.Locale                                                                   | 현재 요청 로케일이, 가장 구체적인 사용가능한 로케일리졸버를 결정합니다. - 실제로 구성된 LocaleResolver/LocaleContextResolver가 사용됩니다.                                                                                  |
+| java.util.TimeZone + java.time.ZoneId                                              | LocaleContextResolver에 의해 결정된 현재 요청과 연관된 표준 시간대.                                                                                                                                 |
+| @PathVariable                                                                      | URI 템플릿 변수에 대한 액세스용입니다. URI 패턴을 참조하십시오.                                                                                                                                          |
+| @MatrixVariable                                                                    | URI 경로 세그먼트의 이름-값 쌍에 대한 액세스용입니다. 자세한 내용은 메트릭스 변수를 참조하십시오.                                                                                                                        |
+| @RequestParam                                                                      | 쿼리 매개 변수에 대한 액세스용입니다. 매개 변수 값은 선언된 메서드 인수 형식으로 변환됩니다. @RequestParam을 참조하십시오.@RequestParam은 예를 들어 속성을 설정하는 옵션입니다. 이 표의 뒷부분에 있는 "기타 인수"를 참조하십시오.                                   |
+| @RequestHeader                                                                     | 요청 헤더에 액세스하려면 헤더 값이 선언된 메서드 인수 유형으로 변환됩니다. @RequestHeader를 참조하십시오.                                                                                                               |
+| @CookieValue                                                                       | 쿠키에 액세스하기 위해. 쿠키 값은 선언된 메서드 인수 유형으로 변환됩니다. @CookieValue를 참조하십시오.                                                                                                                 |
+| @RequestBody                                                                       | HTTP 요청 바디에 대한 액세스 권한. 바디 내용은 HttpMessageReader 인스턴스를 사용하여 선언된 메서드 인수 형식으로 변환됩니다. 리액티브 타입을 지원합니다. @RequestBody 을 참조하십시오.                                                         |
+| @java.util.Map, org.springframework.ui.Model, and org.springframework.ui.ModelMap. | HTML 컨트롤러에서 사용되고 뷰 렌더링의 일부로 템플릿에 노출되는 모델에 액세스하기 위해 사용됩니다.                                                                                                                        |
+| @ModelAttribute                                                                    | 데이터 바인딩 및 유효성 검사가 적용된 모델의 기존 속성(존재하지 않은 경우 인스턴스화됨)에 대한 액세스입니다. @ModelAttribute, Model 및 DataBinder를 참조하십시오. @ModelAttribute는 예를 들어 속성을 설정하는 옵션입니다. 이 표의 뒷부분에 있는 "기타 인수"를 참조하십시오. |
+| Errors, BindingResult                                                              | @ModelAttribute 인수와 같은 명령 개체에 대한 유효성 검사 및 데이터 바인딩의 오류에 대한 액세스입니다. Errors 또는 BindingResult 인수는 검증된 메서드 인수 직후에 선언해야 합니다.                                                           |
+| SessionStatus + class-level @SessionAttributes                                     | 프로세싱 완료가 마킹되기 위해서, @SessionAttributes 어노테이션을 통해 선언된 세션 특성의 정리를 트리거합니다. 자세한 내용은 @SessionAttributes를 참조하십시오.                                                                       |
+| UriComponentsBuilder                                                               | 현재 요청의 호스트, 포트, 구성표 및 컨텍스트 경로와 관련된 URL을 준비합니다. URI 링크를 참조하십시오.                                                                                                                   |
+| @SessionAttribute                                                                  | 모든 세션 속성에 대한 액세스 - 클래스 수준 @SessionAttributes 선언의 결과로 세션에 저장된 모델 속성과 대조됩니다. 자세한 내용은 @SessionAttribute를 참조하십시오.                                                                    |
+| @RequestAttribute                                                                  | 요청 특성에 대한 액세스 권한. 자세한 내용은 @RequestAttribute를 참조하십시오.                                                                                                                             |
+| Any other argument                                                                 | 메서드 인수가 위와 일치하지 않으면 BeanUtils#isSimpleProperty에 의해 결정되는 단순 유형인 경우 @RequestParam으로, 그렇지 않은 경우 @ModelAttribute로 해결됩니다.                                                             |
+
+### Return Values
+
+다음 표에는 지원되는 컨트롤러 메서드 반환 값이 나와 있습니다. Reactor, RxJava 등과 같은 라이브러리의 리액티브 타입은 일반적으로 모든 반환 값에 대해 지원됩니다.
+
+
+
 
 
