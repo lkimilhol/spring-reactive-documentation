@@ -228,3 +228,25 @@ public class MyConfig {
 
 }
 ```
+
+## 1.4.3 Handler Methods
+
+@RequestMapping 핸들러 메소드는 유연한 시그네춰를 가지고 있으며 지원되는 다양한 컨트롤러 메소드 아규먼트 및 반환 값 중에서 선택할 수 있습니다.
+
+### Method Arguments
+
+다음 표는 지원되는 컨트롤러 메서드 아규먼트를 보여줍니다. 리액티브 타입(Reactor, RxJava 또는 기타)은 블록킹 I/O(예: 요청 바디 읽기)을 지원하는 아규먼트에서 지원됩니다. 이 부분은 설명 열에 표시됩니다. 블록킹이 필요가 없는 인수에는 리액티브 타입이 필요하지 않습니다.
+
+| 패턴                                    | 설명                                                                                              |
+|---------------------------------------|-------------------------------------------------------------------------------------------------|
+| ServerWebExchange                     | ServerWebExchange에 접근합니다- HTTP 요청과 응답, 요청과 세션 어트리뷰트, checkNotModified 메서드, 기타 등등을 위한 컨테이너 입니다.  |
+| ServerHttpRequest, ServerHttpResponse | Http 요청 또는 응답에 접근합니다.                                                                           |
+| WebSession                            | 세션에 접근합니다. 어트리뷰트가 추가되지 않는 한 새 세션을 강제로 시작하지 않습니다. 리액티브 타입을 지원합니다.                                |
+| java.security.Principal               | 현재 인증된 사용자- 알려진 경우 특정 Principal 구현 클래스일 수 있습니다. 리액티브 타입을 지원합니다.                                 |
+| org.springframework.http.HttpMethod   | 요청의 HTTP 메서드입니다.                                                                                |
+| java.util.Locale                      | 현재 요청 로케일이, 가장 구체적인 사용가능한 로케일리졸버를 결정합니다. - 실제로 구성된 LocaleResolver/LocaleContextResolver가 사용됩니다. |
+| java.util.TimeZone + java.time.ZoneId | LocaleContextResolver에 의해 결정된 현재 요청과 연관된 표준 시간대.                                                |
+| @PathVariable                         | URI 템플릿 변수에 대한 액세스용입니다. URI 패턴을 참조하십시오.                                                         |
+| @MatrixVariable                       | URI 경로 세그먼트의 이름-값 쌍에 대한 액세스용입니다. 자세한 내용은 메트릭스 변수를 참조하십시오.                                       |
+
+
